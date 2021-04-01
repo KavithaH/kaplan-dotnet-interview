@@ -10,4 +10,11 @@
 
         public decimal Price { get; set; }
     }
+
+    public class OrderDelModel
+    {
+        public short LineNumber { get; set; }
+
+        public int OrderID { get; set; }
+    }
 }

@@ -30,9 +30,12 @@ namespace WebApiTest.Web.Controllers
         /// <returns></returns>
         [Route("{orderID:int}")]
         [HttpGet]
-        public OrderItemsModel Get( int orderID )
+        public IActionResult Get( int orderID )
         {
-            return _orderItemsService.Get( orderID );
+            var orderExists = _orderItemsService.Get(orderID);
+            if (orderExists == null)
+                return BadRequest(404);
+            return Ok(orderExists);
         }
 
         /// <summary>
@@ -52,6 +55,19 @@ namespace WebApiTest.Web.Controllers
             catch ( ValidationException ve )
             {
                 throw new BadHttpRequestException( ve.Message );
+            }
+        }
+        [Route("{orderID:int}")]
+        [HttpDelete]
+        public Task<string> Delete(int orderID, OrderDelModel item)
+        {
+            try
+            {
+                return _orderItemsService.DeleteAsync(orderID, item);
+            }
+            catch (ValidationException ve)
+            {
+                throw new BadHttpRequestException(ve.Message);
             }
         }
     }

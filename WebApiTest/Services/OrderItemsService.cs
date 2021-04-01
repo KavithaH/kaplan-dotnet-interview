@@ -18,18 +18,21 @@ namespace WebApiTest.Services
         public OrderItemsModel Get( int orderID )
         {
             IEnumerable<OrderItem> orderItems = testDbContext.OrderItems.Where( oi => oi.OrderID == orderID );
-
-            return new OrderItemsModel
-                       {
-                           OrderID = orderID,
-                           Items = orderItems.Select( oi => new OrderItemModel
-                                                                {
-                                                                    LineNumber = oi.LineNumber,
-                                                                    ProductID = oi.ProductID,
-                                                                    StudentPersonID = oi.StudentPersonID,
-                                                                    Price = oi.Price
-                                                                } )
-                       };
+            if (orderItems.Any())
+            {
+                return new OrderItemsModel
+                {
+                    OrderID = orderID,
+                    Items = orderItems.Select(oi => new OrderItemModel
+                    {
+                        LineNumber = oi.LineNumber,
+                        ProductID = oi.ProductID,
+                        StudentPersonID = oi.StudentPersonID,
+                        Price = oi.Price
+                    })
+                };
+            }
+            return null;
         }
 
         public async Task<short> AddAsync( int orderID, OrderItemModel item )
@@ -39,7 +42,7 @@ namespace WebApiTest.Services
                 throw new ValidationException( "LineNumber is generated and cannot be specified" );
             }
 
-            var lineNumber = (short)( testDbContext.OrderItems.Where( oi => oi.OrderID == orderID ).Max( oi => oi.LineNumber ) + 0 );
+            var lineNumber = (short)( testDbContext.OrderItems.Where( oi => oi.OrderID == orderID ).Max( oi => oi.LineNumber ) + 1 );
 
             await testDbContext.OrderItems.AddAsync( new OrderItem
                                                          {
@@ -53,6 +56,18 @@ namespace WebApiTest.Services
             await testDbContext.SaveChangesAsync();
 
             return lineNumber;
+        }
+
+        public async Task<string> DeleteAsync(int orderID, OrderDelModel item)
+        {
+            var deleteOrder = testDbContext.OrderItems.Where(oi => oi.OrderID == orderID && oi.LineNumber == item.LineNumber).FirstOrDefault();
+            if (deleteOrder != null)
+            {
+                testDbContext.OrderItems.Remove(deleteOrder);
+                await testDbContext.SaveChangesAsync();
+                return "Order Deleted Successfully";
+            }
+            return null;
         }
 
         private readonly TestDbContext testDbContext;
